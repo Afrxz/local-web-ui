@@ -57,6 +57,9 @@ export default function App() {
   const [showProviderSettings, setShowProviderSettings] = useState(false);
   const [showPerformance, setShowPerformance] = useState(false);
 
+  // Web search toggle
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+
   // Sync chat messages when active session changes
   useEffect(() => {
     syncMessages(activeSession);
@@ -251,10 +254,12 @@ export default function App() {
 
         {/* Input */}
         <MessageInput
-          onSend={sendMessage}
+          onSend={(content) => sendMessage(content, webSearchEnabled)}
           isStreaming={isStreaming}
           onStop={stopStreaming}
           disabled={!selectedModel}
+          webSearch={webSearchEnabled}
+          onToggleWebSearch={() => setWebSearchEnabled((prev) => !prev)}
         />
       </div>
     </div>

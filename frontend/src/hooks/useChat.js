@@ -24,7 +24,7 @@ export default function useChat(activeSession, refreshActiveSession) {
     setError(null);
   }, []);
 
-  const sendMessage = useCallback(async (content) => {
+  const sendMessage = useCallback(async (content, webSearch = false) => {
     if (!activeSession || !content.trim() || isStreaming) return;
 
     setError(null);
@@ -39,6 +39,7 @@ export default function useChat(activeSession, refreshActiveSession) {
     const controller = streamChat(
       activeSession.id,
       content,
+      webSearch,
       // onToken
       (token) => {
         setStreamingContent((prev) => prev + token);

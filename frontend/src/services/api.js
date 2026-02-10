@@ -51,13 +51,13 @@ export async function clearSessionMemory(sessionId) {
 
 // --- Chat (SSE streaming) ---
 
-export function streamChat(sessionId, message, onToken, onDone, onError) {
+export function streamChat(sessionId, message, webSearch, onToken, onDone, onError) {
   const controller = new AbortController();
 
   fetch(`${BASE}/chat/send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id: sessionId, message }),
+    body: JSON.stringify({ session_id: sessionId, message, web_search: webSearch }),
     signal: controller.signal,
   })
     .then(async (res) => {

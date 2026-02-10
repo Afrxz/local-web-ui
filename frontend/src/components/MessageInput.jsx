@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 /**
  * Message input box with send button and keyboard shortcut (Enter to send).
  */
-export default function MessageInput({ onSend, isStreaming, onStop, disabled }) {
+export default function MessageInput({ onSend, isStreaming, onStop, disabled, webSearch, onToggleWebSearch }) {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
 
@@ -48,6 +48,18 @@ export default function MessageInput({ onSend, isStreaming, onStop, disabled }) 
           rows={1}
           className="flex-1 bg-gray-700 text-gray-100 rounded-lg px-4 py-3 resize-none outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 disabled:opacity-50"
         />
+        <button
+          onClick={onToggleWebSearch}
+          title={webSearch ? 'Web search enabled' : 'Web search disabled'}
+          className={`px-3 py-3 rounded-lg font-medium transition-colors flex-shrink-0 flex items-center gap-1.5 text-sm ${
+            webSearch
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-600'
+          }`}
+        >
+          <span>&#127760;</span>
+          <span>Web</span>
+        </button>
         {isStreaming ? (
           <button
             onClick={onStop}
