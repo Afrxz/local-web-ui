@@ -55,6 +55,7 @@ Open **http://localhost:3000** in your browser.
 ## Features
 
 - **Streaming chat** with markdown rendering (code blocks, tables, lists)
+- **Web search grounding** — toggle the 🌐 Web button to augment LLM responses with live DuckDuckGo search results. Fetches top-5 results with full page extraction of the #1 result for richer context. Includes current date/time injection and system prompt grounding to reduce hallucination. No API key required.
 - **Per-session system prompts** with built-in presets (Default, Concise, Technical)
 - **Sliding window memory** with token-budget logic — adapts to conversation length
 - **Two providers**: Ollama (local) and OpenAI-compatible (any remote service)
@@ -72,7 +73,7 @@ backend/           FastAPI server (Python)
 ├── routers/       API endpoints (chat, sessions, models, providers)
 ├── providers/     LLM provider abstraction (Ollama, OpenAI-compatible)
 ├── sessions/      Session manager + sliding window memory
-└── utils/         Token estimation
+└── utils/         Token estimation, web search
 
 frontend/          React + Vite (JavaScript)
 ├── src/
