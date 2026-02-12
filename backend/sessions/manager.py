@@ -57,11 +57,26 @@ class SessionManager:
         self,
         title: str = "New Chat",
         system_prompt: Optional[str] = None,
+        provider: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
     ) -> Session:
         """Create a new isolated session."""
+        settings_kwargs = {}
+        if provider is not None:
+            settings_kwargs["provider"] = provider
+        if base_url is not None:
+            settings_kwargs["base_url"] = base_url
+        if api_key is not None:
+            settings_kwargs["api_key"] = api_key
+        if model is not None:
+            settings_kwargs["model"] = model
+
         session = Session(
             title=title,
             system_prompt=system_prompt or SYSTEM_PROMPT_PRESETS["default"],
+            settings=SessionSettings(**settings_kwargs) if settings_kwargs else SessionSettings(),
         )
         self._sessions[session.id] = session
         return session

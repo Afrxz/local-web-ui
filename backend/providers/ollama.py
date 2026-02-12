@@ -20,6 +20,33 @@ class OllamaProvider(BaseProvider):
             config = ProviderConfig(base_url="http://localhost:11434")
         super().__init__(config)
 
+    @staticmethod
+    def _preprocess_messages(messages: list[dict]) -> list[dict]:
+        """Convert OpenAI vision content-array format to Ollama's images field."""
+        processed = []
+        for msg in messages:
+            if isinstance(msg.get("content"), list):
+                text_parts = []
+                images = []
+                for part in msg["content"]:
+                    if part.get("type") == "text":
+                        text_parts.append(part["text"])
+                    elif part.get("type") == "image_url":
+                        url = part["image_url"]["url"]
+                        # Strip data URI prefix: "data:image/...;base64,"
+                        if url.startswith("data:"):
+                            base64_data = url.split(",", 1)[1] if "," in url else url
+                        else:
+                            base64_data = url
+                        images.append(base64_data)
+                new_msg = {**msg, "content": "\n".join(text_parts)}
+                if images:
+                    new_msg["images"] = images
+                processed.append(new_msg)
+            else:
+                processed.append(msg)
+        return processed
+
     async def send_message(
         self,
         messages: list[dict],
@@ -28,9 +55,10 @@ class OllamaProvider(BaseProvider):
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
         """Stream chat response from Ollama."""
+        ollama_messages = self._preprocess_messages(messages)
         payload = {
             "model": model,
-            "messages": messages,
+            "messages": ollama_messages,
             "stream": True,
             "options": {
                 "num_predict": max_tokens,

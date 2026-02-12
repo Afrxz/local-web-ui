@@ -52,9 +52,16 @@ export default function useSession() {
     }
   }, []);
 
-  const newSession = useCallback(async () => {
+  const newSession = useCallback(async (providerConfig) => {
     try {
-      const session = await createSession('New Chat');
+      // Use passed config, or fall back to localStorage (covers removeSession fallback path)
+      const config = providerConfig || {
+        provider: localStorage.getItem('provider') || undefined,
+        base_url: localStorage.getItem('providerBaseUrl') || undefined,
+        api_key: localStorage.getItem('providerApiKey') || undefined,
+        model: localStorage.getItem('selectedModel') || undefined,
+      };
+      const session = await createSession('New Chat', undefined, config);
       setSessions((prev) => [session, ...prev]);
       await switchSession(session.id);
       return session;

@@ -27,7 +27,7 @@ export default function ChatWindow({ messages, streamingContent, isStreaming, er
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
       {messages.map((msg, i) => (
-        <MessageBubble key={i} role={msg.role} content={msg.content} />
+        <MessageBubble key={i} role={msg.role} content={msg.content} files={msg.files} />
       ))}
 
       {isStreaming && streamingContent && (
@@ -59,7 +59,7 @@ export default function ChatWindow({ messages, streamingContent, isStreaming, er
   );
 }
 
-function MessageBubble({ role, content, isStreaming }) {
+function MessageBubble({ role, content, files, isStreaming }) {
   const isUser = role === 'user';
 
   return (
@@ -72,6 +72,29 @@ function MessageBubble({ role, content, isStreaming }) {
         {isUser ? 'You' : 'AI'}
       </div>
       <div className="flex-1 min-w-0">
+        {/* Attached files */}
+        {files && files.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {files.map((file, i) =>
+              file.type && file.type.startsWith('image/') ? (
+                <a key={i} href={file.dataUrl} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={file.dataUrl}
+                    alt={file.name}
+                    className="h-32 max-w-xs rounded-lg object-cover border border-gray-600 hover:border-blue-500 transition-colors cursor-pointer"
+                  />
+                </a>
+              ) : (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-lg border border-gray-600"
+                >
+                  {file.name}
+                </span>
+              )
+            )}
+          </div>
+        )}
         <div className="markdown-body text-gray-200 leading-relaxed">
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
             {content}

@@ -24,13 +24,13 @@ export default function useChat(activeSession, refreshActiveSession) {
     setError(null);
   }, []);
 
-  const sendMessage = useCallback(async (content, webSearch = false) => {
-    if (!activeSession || !content.trim() || isStreaming) return;
+  const sendMessage = useCallback(async (content, webSearch = false, files = undefined) => {
+    if (!activeSession || (!content.trim() && (!files || files.length === 0)) || isStreaming) return;
 
     setError(null);
 
     // Optimistically add user message to display
-    const userMsg = { role: 'user', content };
+    const userMsg = { role: 'user', content, ...(files ? { files } : {}) };
     setMessages((prev) => [...prev, userMsg]);
 
     setIsStreaming(true);
@@ -40,6 +40,7 @@ export default function useChat(activeSession, refreshActiveSession) {
       activeSession.id,
       content,
       webSearch,
+      files,
       // onToken
       (token) => {
         setStreamingContent((prev) => prev + token);

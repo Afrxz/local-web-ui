@@ -23,10 +23,10 @@ export async function listSessions() {
   return request('/sessions');
 }
 
-export async function createSession(title, systemPrompt) {
+export async function createSession(title, systemPrompt, providerConfig = {}) {
   return request('/sessions', {
     method: 'POST',
-    body: JSON.stringify({ title, system_prompt: systemPrompt }),
+    body: JSON.stringify({ title, system_prompt: systemPrompt, ...providerConfig }),
   });
 }
 
@@ -51,13 +51,18 @@ export async function clearSessionMemory(sessionId) {
 
 // --- Chat (SSE streaming) ---
 
-export function streamChat(sessionId, message, webSearch, onToken, onDone, onError) {
+export function streamChat(sessionId, message, webSearch, files, onToken, onDone, onError) {
   const controller = new AbortController();
+
+  const body = { session_id: sessionId, message, web_search: webSearch };
+  if (files && files.length > 0) {
+    body.files = files.map(({ name, type, dataUrl }) => ({ name, type, dataUrl }));
+  }
 
   fetch(`${BASE}/chat/send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id: sessionId, message, web_search: webSearch }),
+    body: JSON.stringify(body),
     signal: controller.signal,
   })
     .then(async (res) => {

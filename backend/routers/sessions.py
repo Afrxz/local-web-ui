@@ -12,6 +12,10 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 class CreateSessionRequest(BaseModel):
     title: str = "New Chat"
     system_prompt: Optional[str] = None
+    provider: Optional[str] = None
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
+    model: Optional[str] = None
 
 
 class UpdateSessionRequest(BaseModel):
@@ -44,6 +48,10 @@ async def create_session(request: CreateSessionRequest):
     session = session_manager.create_session(
         title=request.title,
         system_prompt=request.system_prompt,
+        provider=request.provider,
+        base_url=request.base_url,
+        api_key=request.api_key,
+        model=request.model,
     )
     return {
         "id": session.id,

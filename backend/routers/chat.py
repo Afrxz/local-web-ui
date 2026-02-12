@@ -1,10 +1,13 @@
 """Chat router — send messages and stream responses via SSE."""
 
+import base64
+import io
 import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
+from PyPDF2 import PdfReader
 
 from backend.sessions.manager import session_manager
 from backend.sessions.memory import build_prompt_messages
@@ -17,10 +20,42 @@ from backend.utils.search import web_search
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 
+class FileAttachment(BaseModel):
+    name: str
+    type: str
+    dataUrl: str
+
+
 class ChatRequest(BaseModel):
     session_id: str
     message: str
     web_search: bool = False
+    files: list[FileAttachment] = []
+
+
+def _extract_file_text(f: "FileAttachment") -> str:
+    """Extract readable text from a file attachment's base64 data URL."""
+    try:
+        # Strip the data URI prefix to get raw base64
+        raw_b64 = f.dataUrl.split(",", 1)[1] if "," in f.dataUrl else f.dataUrl
+        file_bytes = base64.b64decode(raw_b64)
+
+        if f.type == "application/pdf" or f.name.lower().endswith(".pdf"):
+            reader = PdfReader(io.BytesIO(file_bytes))
+            pages = []
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text()
+                if text:
+                    pages.append(f"--- Page {i + 1} ---\n{text}")
+            if pages:
+                return f"[Content of {f.name}]\n" + "\n\n".join(pages)
+            return f"[Attached PDF: {f.name} — could not extract text (scanned/image PDF?)]"
+        else:
+            # Text-based files: .txt, .csv, .json, .md, etc.
+            text = file_bytes.decode("utf-8", errors="replace")
+            return f"[Content of {f.name}]\n{text}"
+    except Exception as e:
+        return f"[Attached file: {f.name} — failed to read: {e}]"
 
 
 def _get_provider(session):
@@ -99,6 +134,35 @@ async def send_message(request: ChatRequest):
         for msg in reversed(prompt_messages):
             if msg["role"] == "user":
                 msg["content"] = user_content
+                break
+
+    # Transform last user message to include file contents if files attached
+    if request.files:
+        for msg in reversed(prompt_messages):
+            if msg["role"] == "user":
+                has_images = any(f.type.startswith("image/") for f in request.files)
+                # Use content-array format only if there are images (vision API)
+                if has_images:
+                    content_parts = [{"type": "text", "text": msg["content"]}]
+                    for f in request.files:
+                        if f.type.startswith("image/"):
+                            content_parts.append({
+                                "type": "image_url",
+                                "image_url": {"url": f.dataUrl},
+                            })
+                        else:
+                            extracted = _extract_file_text(f)
+                            content_parts.append({
+                                "type": "text",
+                                "text": extracted,
+                            })
+                    msg["content"] = content_parts
+                else:
+                    # Text-only files: append extracted content as plain text
+                    file_texts = []
+                    for f in request.files:
+                        file_texts.append(_extract_file_text(f))
+                    msg["content"] = msg["content"] + "\n\n" + "\n\n".join(file_texts)
                 break
 
     provider = _get_provider(session)

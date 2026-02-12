@@ -11,14 +11,20 @@ import {
  * base URL, API key, and connection testing.
  */
 export default function useProvider() {
-  const [provider, setProvider] = useState('ollama');
+  const [provider, setProvider] = useState(() => localStorage.getItem('provider') || 'ollama');
   const [presets, setPresets] = useState({});
-  const [baseUrl, setBaseUrl] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState(() => localStorage.getItem('providerBaseUrl') || '');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('providerApiKey') || '');
   const [models, setModels] = useState([]);
-  const [selectedModel, setSelectedModel] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem('selectedModel') || null);
   const [connectionStatus, setConnectionStatus] = useState(null); // null | 'testing' | 'connected' | 'failed'
   const [loading, setLoading] = useState(false);
+
+  // Persist provider config to localStorage
+  useEffect(() => { localStorage.setItem('provider', provider); }, [provider]);
+  useEffect(() => { localStorage.setItem('providerBaseUrl', baseUrl); }, [baseUrl]);
+  useEffect(() => { localStorage.setItem('providerApiKey', apiKey); }, [apiKey]);
+  useEffect(() => { if (selectedModel) localStorage.setItem('selectedModel', selectedModel); }, [selectedModel]);
 
   // Load presets and default config on mount
   useEffect(() => {

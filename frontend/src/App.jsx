@@ -77,18 +77,27 @@ export default function App() {
     if (activeSession?.settings?.provider) {
       setProvider(activeSession.settings.provider);
     }
-    if (activeSession?.settings?.base_url != null) {
+    if (activeSession?.settings?.base_url) {
       setBaseUrl(activeSession.settings.base_url);
     }
-    if (activeSession?.settings?.api_key != null) {
+    if (activeSession?.settings?.api_key) {
       setApiKey(activeSession.settings.api_key);
     }
   }, [activeSession?.id]);
 
-  // Auto-fetch models on provider change
+  // Auto-fetch models on provider/credentials change (debounced for remote providers)
   useEffect(() => {
-    fetchModels();
-  }, [provider]);
+    if (provider === 'ollama') {
+      fetchModels();
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (baseUrl || apiKey) {
+        fetchModels();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [provider, baseUrl, apiKey]);
 
   // Save model selection to session
   const handleModelSelect = (modelId) => {
@@ -148,7 +157,12 @@ export default function App() {
         sessions={sessions}
         activeSessionId={activeSessionId}
         onSelectSession={switchSession}
-        onNewSession={newSession}
+        onNewSession={() => newSession({
+          provider,
+          base_url: baseUrl || undefined,
+          api_key: apiKey || undefined,
+          model: selectedModel || undefined,
+        })}
         onDeleteSession={removeSession}
       />
 
@@ -268,7 +282,7 @@ export default function App() {
 
         {/* Input */}
         <MessageInput
-          onSend={(content) => sendMessage(content, webSearchEnabled)}
+          onSend={(content, files) => sendMessage(content, webSearchEnabled, files)}
           isStreaming={isStreaming}
           onStop={stopStreaming}
           disabled={!selectedModel}
