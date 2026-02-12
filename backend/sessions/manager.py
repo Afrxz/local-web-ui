@@ -25,6 +25,8 @@ class SessionSettings(BaseModel):
     max_response_tokens: int = DEFAULT_LOCAL_MAX_TOKENS
     temperature: float = 0.7
     low_vram_mode: bool = True
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
 
 
 class Session(BaseModel):

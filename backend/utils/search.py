@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timezone
 
 import httpx
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 
 
 def _strip_html(html: str) -> str:

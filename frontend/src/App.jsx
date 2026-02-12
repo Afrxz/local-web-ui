@@ -72,10 +72,16 @@ export default function App() {
     }
   }, [activeSession?.id]);
 
-  // Sync provider from session settings
+  // Sync provider and credentials from session settings
   useEffect(() => {
     if (activeSession?.settings?.provider) {
       setProvider(activeSession.settings.provider);
+    }
+    if (activeSession?.settings?.base_url != null) {
+      setBaseUrl(activeSession.settings.base_url);
+    }
+    if (activeSession?.settings?.api_key != null) {
+      setApiKey(activeSession.settings.api_key);
     }
   }, [activeSession?.id]);
 
@@ -93,6 +99,8 @@ export default function App() {
           ...activeSession?.settings,
           model: modelId,
           provider,
+          base_url: baseUrl || null,
+          api_key: apiKey || null,
         },
       });
     }
@@ -109,7 +117,13 @@ export default function App() {
   const handlePerformanceUpdate = (newSettings) => {
     if (activeSessionId) {
       updateSession(activeSessionId, {
-        settings: { ...newSettings, model: selectedModel, provider },
+        settings: {
+          ...newSettings,
+          model: selectedModel,
+          provider,
+          base_url: baseUrl || null,
+          api_key: apiKey || null,
+        },
       });
     }
   };

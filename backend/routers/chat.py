@@ -31,8 +31,12 @@ def _get_provider(session):
             ProviderConfig(base_url=settings.ollama_base_url)
         )
     else:
-        base_url = settings.openai_compat_base_url or "https://api.openai.com/v1"
-        api_key = settings.openai_compat_api_key
+        base_url = (
+            session.settings.base_url
+            or settings.openai_compat_base_url
+            or "https://api.openai.com/v1"
+        )
+        api_key = session.settings.api_key or settings.openai_compat_api_key
         return OpenAICompatProvider(
             ProviderConfig(base_url=base_url, api_key=api_key)
         )
