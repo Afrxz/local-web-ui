@@ -18,9 +18,15 @@ def estimate_message_tokens(message: dict) -> int:
     """Estimate tokens for a single chat message.
 
     Accounts for role overhead (~4 tokens per message for formatting).
+    Content may be a string or a vision content-array (list of parts).
     """
     content = message.get("content", "")
     role_overhead = 4
+    if isinstance(content, list):
+        # Vision content array — count only text parts, images are ~85 tokens each
+        text = " ".join(p.get("text", "") for p in content if p.get("type") == "text")
+        image_count = sum(1 for p in content if p.get("type") == "image_url")
+        return estimate_tokens(text) + (image_count * 85) + role_overhead
     return estimate_tokens(content) + role_overhead
 
 
